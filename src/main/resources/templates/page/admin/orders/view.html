@@ -1,0 +1,51 @@
+<div th:fragment="content">
+    <h1 class="mb-4">Order Details</h1>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Order Information</h5>
+            <p><strong>Order ID:</strong> <span th:text="${order.id}"></span></p>
+            <p><strong>Customer:</strong> <span th:text="${order.customerName}"></span></p>
+            <p><strong>Email:</strong> <span th:text="${order.customerEmail}"></span></p>
+            <p><strong>Date:</strong> <span th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}"></span></p>
+            <p><strong>Status:</strong> <span th:text="${order.status}"></span></p>
+            <p><strong>Total:</strong> <span th:text="${#numbers.formatCurrency(order.total)}"></span></p>
+        </div>
+    </div>
+
+    <h2>Order Items</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Book</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${order.orderItems}">
+            <td th:text="${item.book.title}"></td>
+            <td th:text="${item.quantity}"></td>
+            <td th:text="${#numbers.formatCurrency(item.price)}"></td>
+            <td th:text="${#numbers.formatCurrency(item.price * item.quantity)}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Update Order Status</h2>
+    <form th:action="@{/admin/orders/update-status}" method="post">
+        <input type="hidden" name="orderId" th:value="${order.id}">
+        <div class="mb-3">
+            <label for="status" class="form-label">New Status</label>
+            <select class="form-control" id="status" name="status" required>
+                <option value="PENDING">Pending</option>
+                <option value="PROCESSING">Processing</option>
+                <option value="SHIPPED">Shipped</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="CANCELLED">Cancelled</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Status</button>
+    </form>
+</div>
+

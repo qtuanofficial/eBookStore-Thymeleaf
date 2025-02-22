@@ -16,15 +16,24 @@ public class OrderDetail {
     private Date updatedAt;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @OneToMany(mappedBy = "orderDetail")
     private List<OrderItem> orderItems;
 
     @OneToOne
-    @JoinColumn(name = "payment_id", insertable = false, updatable = false)
+    @JoinColumn(name = "payment_id")
     private PaymentDetail paymentDetail;
+
+    @PrePersist
+    @PreUpdate
+    protected void onUpdate() {
+        if (createdAt == null) {
+            createdAt = new Date();
+        }
+        updatedAt = new Date();
+    }
 
     // Getters and Setters
     public int getId() {

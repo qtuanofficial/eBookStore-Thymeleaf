@@ -22,7 +22,12 @@ public class SubCategory {
 
     @OneToMany(mappedBy = "subCategory")
     private List<Book> books;
-
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = new Date();
+        }
+    }
     // Getters and Setters
     public int getId() {
         return id;
