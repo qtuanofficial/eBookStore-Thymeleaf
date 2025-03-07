@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm danh mục mới</title>
+</head>
+<body th:replace="~{page/admin/layout :: layout(~{::body}, 'Thêm danh mục mới', 'categories')}">
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/admin/categories/create}" method="post" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Tên danh mục</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Ảnh danh mục</label>
+                            <div class="d-flex flex-column align-items-center">
+                                <img id="imagePreview" src="/image/default-category.png" 
+                                     class="img-thumbnail mb-2" 
+                                     style="width: 200px; height: 200px; object-fit: cover;">
+                                
+                                <div class="d-flex gap-2">
+                                    <label class="btn btn-outline-primary">
+                                        <i class="fas fa-upload me-2"></i>Upload
+                                        <input type="file" name="imageFile" 
+                                               accept="image/*" style="display: none"
+                                               onchange="previewImage(this);">
+                                    </label>
+                                    <button type="button" class="btn btn-outline-danger"
+                                            onclick="resetImage()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <a href="/admin/categories" class="btn btn-secondary me-2">Hủy</a>
+                    <button type="submit" class="btn btn-primary">Thêm danh mục</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function resetImage() {
+            document.getElementById('imagePreview').src = '/image/default-category.png';
+            document.querySelector('input[name="imageFile"]').value = '';
+        }
+    </script>
+</body>
+</html>

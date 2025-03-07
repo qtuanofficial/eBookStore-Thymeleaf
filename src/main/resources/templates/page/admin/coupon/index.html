@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý mã giảm giá</title>
+</head>
+<body th:replace="~{page/admin/layout :: layout(~{::body}, 'Quản lý mã giảm giá', 'coupons')}">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Danh sách mã giảm giá</h4>
+        <a href="/admin/coupons/create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Thêm mã giảm giá mới
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Coupons List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã</th>
+                            <th>Mô tả</th>
+                            <th>Giá trị</th>
+                            <th>Điều kiện</th>
+                            <th>Thời hạn</th>
+                            <th>Đã dùng</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="coupon : ${coupons}">
+                            <td>
+                                <span class="badge bg-primary" th:text="${coupon.code}"></span>
+                            </td>
+                            <td th:text="${coupon.description}"></td>
+                            <td>
+                                <span th:if="${coupon.discountType == T(com.vn.ebookstore.model.Coupon.DiscountType).PERCENTAGE}"
+                                      th:text="${coupon.discountValue + '%'}"></span>
+                                <span th:if="${coupon.discountType == T(com.vn.ebookstore.model.Coupon.DiscountType).FIXED_AMOUNT}"
+                                      th:text="${#numbers.formatDecimal(coupon.discountValue, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}"></span>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div th:if="${coupon.minPurchase != null}">
+                                        Đơn tối thiểu: 
+                                        <span th:text="${#numbers.formatDecimal(coupon.minPurchase, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}">
+                                        </span>
+                                    </div>
+                                    <div th:if="${coupon.maxDiscount != null}">
+                                        Giảm tối đa: 
+                                        <span th:text="${#numbers.formatDecimal(coupon.maxDiscount, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}">
+                                        </span>
+                                    </div>
+                                    <div th:if="${coupon.usageLimit != null}">
+                                        Giới hạn: <span th:text="${coupon.usageLimit}"></span> lần
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div>Từ: <span th:text="${#dates.format(coupon.startDate, 'dd/MM/yyyy')}"></span></div>
+                                    <div>Đến: <span th:text="${#dates.format(coupon.endDate, 'dd/MM/yyyy')}"></span></div>
+                                </div>
+                            </td>
+                            <td th:text="${coupon.timesUsed + ' lần'}"></td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${coupon.isActive ? 'bg-success' : 'bg-danger'}"
+                                      th:text="${coupon.isActive ? 'Đang hoạt động' : 'Đã khóa'}">
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a th:href="@{/admin/coupons/edit/{id}(id=${coupon.id})}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-warning"
+                                            th:onclick="'toggleStatus(' + ${coupon.id} + ')'">
+                                        <i class="fas fa-power-off"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleStatus(id) {
+            if (confirm('Bạn có chắc chắn muốn thay đổi trạng thái của mã giảm giá này?')) {
+                fetch(`/admin/coupons/${id}/toggle-status`, {
+                    method: 'POST'
+                }).then(() => {
+                    window.location.reload();
+                });
+            }
+        }
+    </script>
+</body>
+</html>

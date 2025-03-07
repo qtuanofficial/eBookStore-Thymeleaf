@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý đánh giá</title>
+</head>
+<body th:replace="~{page/admin/layout :: layout(~{::body}, 'Quản lý đánh giá', 'reviews')}">
+    <!-- Alert Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Sách</th>
+                            <th>Người đánh giá</th>
+                            <th>Đánh giá</th>
+                            <th>Nội dung</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="review : ${reviews}">
+                            <td th:text="${review.id}"></td>
+                            <td>
+                                <div th:text="${review.book.title}"></div>
+                                <small class="text-muted" th:text="${review.book.author}"></small>
+                            </td>
+                            <td th:text="${review.user.username}"></td>
+                            <td>
+                                <div class="rating-stars">
+                                    <i th:each="i : ${#numbers.sequence(1, 5)}"
+                                       th:class="${i <= review.rating ? 'fas' : 'far'} + ' fa-star'"
+                                       style="color: #fbbf24;"></i>
+                                </div>
+                            </td>
+                            <td th:text="${review.comment}"></td>
+                            <td th:text="${#dates.format(review.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${
+                                          review.status == 'PENDING' ? 'bg-warning' :
+                                          review.status == 'APPROVED' ? 'bg-success' :
+                                          review.status == 'REJECTED' ? 'bg-danger' : 'bg-secondary'
+                                      }"
+                                      th:text="${review.status}">
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <form th:if="${review.status == 'PENDING'}" 
+                                          th:action="@{/admin/reviews/{id}/approve(id=${review.id})}"
+                                          method="post" class="me-1">
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                    <form th:if="${review.status == 'PENDING'}"
+                                          th:action="@{/admin/reviews/{id}/reject(id=${review.id})}"
+                                          method="post" class="me-1">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger"
+                                            th:onclick="'deleteReview(' + ${review.id} + ')'">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác nhận xóa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Bạn có chắc chắn muốn xóa đánh giá này không?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <form id="deleteForm" method="POST">
+                        <button type="submit" class="btn btn-danger">Xóa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function deleteReview(id) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            const form = document.getElementById('deleteForm');
+            form.action = `/admin/reviews/delete/${id}`;
+            modal.show();
+        }
+    </script>
+</body>
+</html>

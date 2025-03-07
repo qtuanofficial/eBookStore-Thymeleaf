@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm người dùng mới</title>
+</head>
+<body th:replace="~{page/admin/layout :: layout(~{::body}, 'Thêm người dùng mới', 'users')}">
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/admin/users/create}" method="post" enctype="multipart/form-data">
+                <div class="row">
+                    <!-- Thông tin cơ bản -->
+                    <div class="col-md-8">
+                        <h5 class="card-title mb-4">Thông tin người dùng</h5>
+                        
+                        <!-- Login Info -->
+                        <div class="mb-4">
+                            <h6 class="card-subtitle mb-3">Thông tin đăng nhập</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Tên đăng nhập</label>
+                                <input type="text" class="form-control" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mật khẩu</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                        </div>
+
+                        <!-- Personal Info -->
+                        <div class="mb-4">
+                            <h6 class="card-subtitle mb-3">Thông tin cá nhân</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Họ</label>
+                                    <input type="text" class="form-control" name="firstName">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tên</label>
+                                    <input type="text" class="form-control" name="lastName">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" name="phoneNumber">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ngày sinh</label>
+                                <input type="date" class="form-control" name="birthOfDate">
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="mb-4">
+                            <h6 class="card-subtitle mb-3">Địa chỉ</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Địa chỉ chi tiết</label>
+                                <input type="text" class="form-control" name="addressLine">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Phường/Xã</label>
+                                    <input type="text" class="form-control" name="ward">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Quận/Huyện</label>
+                                    <input type="text" class="form-control" name="district">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tỉnh/Thành phố</label>
+                                    <input type="text" class="form-control" name="city">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Mã bưu chính</label>
+                                    <input type="text" class="form-control" name="postalCode">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Role & Status -->
+                        <div class="mb-4">
+                            <h6 class="card-subtitle mb-3">Quyền & Trạng thái</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Vai trò</label>
+                                <select class="form-select" name="role" required>
+                                    <option value="USER">Người dùng</option>
+                                    <option value="ADMIN">Quản trị viên</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="isActive" checked>
+                                    <label class="form-check-label">Kích hoạt tài khoản</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Avatar Upload -->
+                    <div class="col-md-4">
+                        <h5 class="card-title mb-4">Ảnh đại diện</h5>
+                        <div class="mb-3">
+                            <div class="d-flex flex-column align-items-center">
+                                <img id="avatarPreview" src="/image/default-avatar.png"
+                                     class="rounded-circle img-thumbnail mb-2"
+                                     style="width: 200px; height: 200px; object-fit: cover;">
+                                
+                                <div class="d-flex gap-2">
+                                    <label class="btn btn-outline-primary">
+                                        <i class="fas fa-upload me-2"></i>Upload
+                                        <input type="file" name="avatar" accept="image/*"
+                                               style="display: none"
+                                               onchange="previewImage(this);">
+                                    </label>
+                                    <button type="button" class="btn btn-outline-danger"
+                                            onclick="resetImage()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <a href="/admin/users" class="btn btn-secondary me-2">Hủy</a>
+                    <button type="submit" class="btn btn-primary">Thêm người dùng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function resetImage() {
+            document.getElementById('avatarPreview').src = '/image/default-avatar.png';
+            document.querySelector('input[name="avatar"]').value = '';
+        }
+    </script>
+</body>
+</html>

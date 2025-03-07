@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm mã giảm giá</title>
+</head>
+<body th:replace="~{page/admin/layout :: layout(~{::body}, 'Thêm mã giảm giá', 'coupons')}">
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/admin/coupons/create}" method="post">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Thông tin cơ bản -->
+                        <div class="mb-4">
+                            <h6 class="card-subtitle mb-3">Thông tin cơ bản</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Mã giảm giá</label>
+                                <input type="text" class="form-control" name="code" required
+                                       placeholder="VD: SUMMER2024">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Mô tả</label>
+                                <textarea class="form-control" name="description" rows="2"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Loại giảm giá</label>
+                                <select class="form-select" name="discountType" required
+                                        onchange="updateDiscountValueLabel()">
+                                    <option value="PERCENTAGE">Giảm theo phần trăm (%)</option>
+                                    <option value="FIXED_AMOUNT">Giảm số tiền cố định</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" id="discountValueLabel">Giá trị giảm (%)</label>
+                                <input type="number" class="form-control" name="discountValue" 
+                                       required min="0" step="0.1">
+                            </div>
+                        </div>
+
+                        <!-- Điều kiện áp dụng -->
+                        <div class="mb-4">
+                            <h6 class="card-subtitle mb-3">Điều kiện áp dụng</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Giá trị đơn hàng tối thiểu (VNĐ)</label>
+                                <input type="number" class="form-control" name="minPurchase" min="0">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Giảm tối đa (VNĐ)</label>
+                                <input type="number" class="form-control" name="maxDiscount" min="0">
+                                <small class="text-muted">Chỉ áp dụng cho giảm giá theo phần trăm</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Số lần sử dụng tối đa</label>
+                                <input type="number" class="form-control" name="usageLimit" min="1">
+                            </div>
+                        </div>
+
+                        <!-- Thời gian -->
+                        <div class="mb-4">
+                            <h6 class="card-subtitle mb-3">Thời gian áp dụng</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Ngày bắt đầu</label>
+                                        <input type="datetime-local" class="form-control" 
+                                               name="startDate" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Ngày kết thúc</label>
+                                        <input type="datetime-local" class="form-control" 
+                                               name="endDate" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <a href="/admin/coupons" class="btn btn-secondary me-2">Hủy</a>
+                    <button type="submit" class="btn btn-primary">Thêm mã giảm giá</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function updateDiscountValueLabel() {
+            const type = document.querySelector('select[name="discountType"]').value;
+            const label = document.getElementById('discountValueLabel');
+            if (type === 'PERCENTAGE') {
+                label.textContent = 'Giá trị giảm (%)';
+            } else {
+                label.textContent = 'Giá trị giảm (VNĐ)';
+            }
+        }
+    </script>
+</body>
+</html>

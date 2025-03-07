@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý thanh toán</title>
+</head>
+<body th:replace="~{page/admin/layout :: layout(~{::body}, 'Quản lý thanh toán', 'payments')}">
+    <!-- Alert Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Mã đơn hàng</th>
+                            <th>Khách hàng</th>
+                            <th>Phương thức</th>
+                            <th>Số tiền</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="payment : ${payments}">
+                            <td th:text="${payment.id}"></td>
+                            <td>
+                                <a th:href="@{/admin/orders/{id}(id=${payment.order.id})}"
+                                   th:text="${'#' + payment.order.id}">
+                                </a>
+                            </td>
+                            <td th:text="${payment.order.user.username}"></td>
+                            <td th:text="${payment.provider}"></td>
+                            <td th:text="${#numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}"></td>
+                            <td th:text="${#dates.format(payment.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${
+                                          payment.status == 'PENDING' ? 'bg-warning' :
+                                          payment.status == 'SUCCESS' ? 'bg-success' :
+                                          payment.status == 'FAILED' ? 'bg-danger' : 'bg-secondary'
+                                      }"
+                                      th:text="${payment.status}">
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group" th:if="${payment.status == 'PENDING'}">
+                                    <button type="button" class="btn btn-sm btn-outline-success"
+                                            th:onclick="'updatePaymentStatus(' + ${payment.id} + ', \'SUCCESS\')'">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            th:onclick="'updatePaymentStatus(' + ${payment.id} + ', \'FAILED\')'">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updatePaymentStatus(id, status) {
+            if (confirm('Bạn có chắc chắn muốn cập nhật trạng thái thanh toán?')) {
+                fetch(`/admin/payments/${id}/status?status=${status}`, {
+                    method: 'POST'
+                }).then(() => {
+                    window.location.reload();
+                });
+            }
+        }
+    </script>
+</body>
+</html>

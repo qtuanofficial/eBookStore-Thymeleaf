@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý đơn hàng</title>
+</head>
+<body th:replace="~{page/admin/layout :: layout(~{::body}, 'Quản lý đơn hàng', 'orders')}">
+    <!-- Alert Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Thanh toán</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="order : ${orders}">
+                            <td th:text="${order.id}"></td>
+                            <td>
+                                <div th:text="${order.user.username}"></div>
+                                <small class="text-muted" th:text="${order.user.email}"></small>
+                            </td>
+                            <td th:text="${#dates.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}"></td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${
+                                          order.status == 'PENDING' ? 'bg-warning' :
+                                          order.status == 'CONFIRMED' ? 'bg-info' :
+                                          order.status == 'SHIPPING' ? 'bg-primary' :
+                                          order.status == 'DELIVERED' ? 'bg-success' :
+                                          order.status == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'
+                                      }"
+                                      th:text="${order.status}">
+                                </span>
+                            </td>
+                            <td>
+                                <span th:if="${not #lists.isEmpty(order.payments)}"
+                                      th:with="payment=${order.payments[0]}"
+                                      class="badge"
+                                      th:classappend="${
+                                          payment.status == 'PENDING' ? 'bg-warning' :
+                                          payment.status == 'SUCCESS' ? 'bg-success' :
+                                          payment.status == 'FAILED' ? 'bg-danger' : 'bg-secondary'
+                                      }"
+                                      th:text="${payment.status}">
+                                </span>
+                            </td>
+                            <td>
+                                <a th:href="@{/admin/orders/{id}(id=${order.id})}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
