@@ -1,10 +1,217 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>Admin Dashboard</title>
 </head>
-<body>
+<body th:replace="~{page/admin/layout :: layout(~{::body}, 'Dashboard', 'dashboard')}">
+    <!-- Thống kê chung -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Tổng doanh thu</h6>
+                        <h4 class="mb-0" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</h4>
+                    </div>
+                    <div class="icon-box bg-primary-light">
+                        <i class="fas fa-money-bill-wave text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Đơn hàng mới</h6>
+                        <h4 class="mb-0" th:text="${newOrdersCount}">0</h4>
+                    </div>
+                    <div class="icon-box bg-success-light">
+                        <i class="fas fa-shopping-cart text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Số lượng sách</h6>
+                        <h4 class="mb-0" th:text="${totalBooks}">0</h4>
+                    </div>
+                    <div class="icon-box bg-info-light">
+                        <i class="fas fa-book text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Người dùng mới</h6>
+                        <h4 class="mb-0" th:text="${newUsersCount}">0</h4>
+                    </div>
+                    <div class="icon-box bg-warning-light">
+                        <i class="fas fa-users text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Revenue Chart -->
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Doanh thu theo tháng</h5>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders by Status -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Trạng thái đơn hàng</h5>
+                    <canvas id="orderStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <!-- Recent Orders -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Đơn hàng gần đây</h5>
+                        <a href="/admin/orders" class="btn btn-sm btn-primary">Xem tất cả</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Khách hàng</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Tổng tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="order : ${recentOrders}">
+                                    <td th:text="${order.id}"></td>
+                                    <td th:text="${order.user.username}"></td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${
+                                                  order.status == 'PENDING' ? 'bg-warning' :
+                                                  order.status == 'CONFIRMED' ? 'bg-info' :
+                                                  order.status == 'SHIPPING' ? 'bg-primary' :
+                                                  order.status == 'DELIVERED' ? 'bg-success' :
+                                                  order.status == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'
+                                              }"
+                                              th:text="${order.status}">
+                                        </span>
+                                    </td>
+                                    <td class="text-end" th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Reviews -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Đánh giá gần đây</h5>
+                        <a href="/admin/reviews" class="btn btn-sm btn-primary">Xem tất cả</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Người dùng</th>
+                                    <th>Sách</th>
+                                    <th>Đánh giá</th>
+                                    <th>Ngày</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="review : ${recentReviews}">
+                                    <td th:text="${review.user.username}"></td>
+                                    <td th:text="${review.book.title}"></td>
+                                    <td>
+                                        <div class="rating-stars">
+                                            <i th:each="i : ${#numbers.sequence(1, 5)}"
+                                               th:class="${i <= review.rating ? 'fas' : 'far'} + ' fa-star'"
+                                               style="color: #fbbf24;"></i>
+                                        </div>
+                                    </td>
+                                    <td th:text="${#dates.format(review.createdAt, 'dd/MM/yyyy')}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom scripts for charts -->
+    <script th:inline="javascript">
+        // Revenue Chart
+        const revenueData = /*[[${revenueData}]]*/ [];
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: revenueData.map(d => d.month),
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revenueData.map(d => d.revenue),
+                    borderColor: '#3b82f6',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Order Status Chart
+        const orderStatusData = /*[[${orderStatusData}]]*/ [];
+        const ctx2 = document.getElementById('orderStatusChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: orderStatusData.map(d => d.status),
+                datasets: [{
+                    data: orderStatusData.map(d => d.count),
+                    backgroundColor: [
+                        '#f59e0b', // Pending
+                        '#3b82f6', // Processing
+                        '#10b981', // Completed
+                        '#ef4444'  // Cancelled
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
 </body>
 </html>

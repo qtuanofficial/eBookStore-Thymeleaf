@@ -8,6 +8,9 @@ import java.util.List;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Integer> {
+    List<Review> findByBookIdOrderByCreatedAtDesc(Integer bookId);
+    List<Review> findByStatus(String status);
+    List<Review> findTop5ByOrderByCreatedAtDesc();
     List<Review> findByBookId(Integer bookId);
     List<Review> findByUserId(Integer userId);
     boolean existsByUserIdAndBookId(Integer userId, Integer bookId);
