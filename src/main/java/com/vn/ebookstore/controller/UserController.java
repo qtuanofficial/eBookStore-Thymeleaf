@@ -1,47 +1,64 @@
 package com.vn.ebookstore.controller;
 
-import com.vn.ebookstore.model.*;
-import com.vn.ebookstore.service.BookService;
-import com.vn.ebookstore.service.CategoryService;
-import com.vn.ebookstore.service.UserService;
-import com.vn.ebookstore.service.WishlistService;
-import com.vn.ebookstore.service.CartService;
-import com.vn.ebookstore.service.ReviewService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.Principal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.io.IOException;
 import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.vn.ebookstore.model.Address;
+import com.vn.ebookstore.model.Book;
+import com.vn.ebookstore.model.Cart;
+import com.vn.ebookstore.model.Category;
+import com.vn.ebookstore.model.OrderDetail;
+import com.vn.ebookstore.model.PaymentDetail;
+import com.vn.ebookstore.model.Review;
+import com.vn.ebookstore.model.User;
+import com.vn.ebookstore.model.Wishlist;
 import com.vn.ebookstore.security.UserDetailsImpl;
 import com.vn.ebookstore.service.AddressService;
+import com.vn.ebookstore.service.BookService;
+import com.vn.ebookstore.service.CartService;
+import com.vn.ebookstore.service.CategoryService;
 import com.vn.ebookstore.service.OrderDetailService;
 import com.vn.ebookstore.service.PaymentDetailService;
+import com.vn.ebookstore.service.ReviewService;
+import com.vn.ebookstore.service.UserService;
+import com.vn.ebookstore.service.WishlistService;
 
 @Controller
 @RequestMapping("/user")
@@ -144,22 +161,6 @@ public class UserController {
         }
         return "page/user/faq";
     }
-
-    @GetMapping("/order_tracking")
-    public String orderTracking(Model model, Principal principal) {
-        List<Category> categories = categoryService.getAllCategories();
-        model.addAttribute("categories", categories);
-
-        if (principal != null) {
-            User user = userService.getUserByEmail(principal.getName());
-            Cart cart = cartService.getCurrentCartByUser(user);
-            List<Wishlist> wishlists = wishlistService.getWishlistsByUser(user);
-            model.addAttribute("cart", cart);
-            model.addAttribute("wishlists", wishlists != null ? wishlists : new ArrayList<>());
-        }
-        return "page/user/order_tracking";
-    }
-
     // ==================== Product Related Mappings ====================
     @GetMapping("/products")
     public String products(
@@ -178,10 +179,10 @@ public class UserController {
         Double maxPriceDouble = null;
         try {
             if (minPrice != null && !minPrice.trim().isEmpty()) {
-                minPriceDouble = Double.parseDouble(minPrice.replace(",", ""));
+                minPriceDouble = Double.valueOf(minPrice.replace(",", ""));
             }
             if (maxPrice != null && !maxPrice.trim().isEmpty()) {
-                maxPriceDouble = Double.parseDouble(maxPrice.replace(",", ""));
+                maxPriceDouble = Double.valueOf(maxPrice.replace(",", ""));
             }
         } catch (NumberFormatException e) {
             // Log lỗi và dùng giá trị mặc định
@@ -700,7 +701,10 @@ public class UserController {
                 }
 
                 String originalFilename = avatar.getOriginalFilename();
-                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                String extension = "";
+                if (originalFilename != null && originalFilename.lastIndexOf(".") != -1) {
+                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
                 String filename = UUID.randomUUID().toString() + extension;
 
                 Path filePath = uploadPath.resolve(filename);
@@ -745,9 +749,15 @@ public class UserController {
 
             redirectAttributes.addFlashAttribute("success", "Thông tin cá nhân đã được cập nhật");
             
-        } catch (Exception e) {
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xử lý tệp ảnh đại diện: " + e.getMessage());
+            return "redirect:/user/profile";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/user/profile";
+        } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
-            return "redirect:/user/profile"; // Return to profile page on error
+            return "redirect:/user/profile";
         }
         return "redirect:/user/profile"; // Redirect to home page on success
     }
@@ -812,8 +822,17 @@ public class UserController {
             } else {
                 throw new RuntimeException("Không thể tạo đơn hàng!");
             }
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "Dữ liệu đầu vào không hợp lệ: " + e.getMessage());
+            return "redirect:/user/purchase";
+        } catch (SecurityException e) {
+            redirectAttributes.addFlashAttribute("error", "Không có quyền thực hiện thao tác này: " + e.getMessage()); 
+            return "redirect:/user/purchase";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi xử lý đơn hàng: " + e.getMessage());
+            return "redirect:/user/purchase"; 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Lỗi không xác định: " + e.getMessage());
             return "redirect:/user/purchase";
         }
     }
@@ -886,7 +905,7 @@ public class UserController {
 
             // Giả lập thanh toán thành công
             PaymentDetail payment = order.getPayments().get(0);
-            payment = paymentDetailService.updatePaymentStatus(payment.getId(), "SUCCESS");
+            paymentDetailService.updatePaymentStatus(payment.getId(), "SUCCESS");
             
             return ResponseEntity.ok()
                 .body(Map.of("message", "Thanh toán thành công"));

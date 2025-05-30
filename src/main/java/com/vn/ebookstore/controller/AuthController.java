@@ -1,8 +1,15 @@
 package com.vn.ebookstore.controller;
 
-import com.vn.ebookstore.model.User;
-import com.vn.ebookstore.model.Address;
-import com.vn.ebookstore.service.UserService;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.security.core.Authentication;
@@ -10,19 +17,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.UUID;
-import java.util.ArrayList;
-import java.util.List;
+import com.vn.ebookstore.model.Address;
+import com.vn.ebookstore.model.User;
+import com.vn.ebookstore.service.UserService;
 
 @Controller
 public class AuthController {
@@ -95,7 +99,7 @@ public class AuthController {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
                 Date birthDate = dateFormat.parse(birthOfDate);
                 user.setBirthOfDate(birthDate);
-            } catch (Exception e) {
+            } catch (java.text.ParseException | NullPointerException e) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Định dạng ngày sinh không hợp lệ!");
                 return "redirect:/register";
             }
@@ -123,7 +127,10 @@ public class AuthController {
 
                 // Tạo tên file ngẫu nhiên để tránh trùng lặp
                 String originalFilename = avatar.getOriginalFilename();
-                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                String extension = "";
+                if (originalFilename != null && originalFilename.lastIndexOf(".") != -1) {
+                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
                 String filename = UUID.randomUUID().toString() + extension;
 
                 // Lưu file mới
